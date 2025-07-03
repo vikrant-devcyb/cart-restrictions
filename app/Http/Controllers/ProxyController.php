@@ -171,7 +171,7 @@ class ProxyController extends Controller
         $customer = $searchResponse['customers'][0];
         $customerId = $customer['id'];
 
-        // ✅ Check if already unsubscribed
+        //Check if already unsubscribed
         $emailConsent = $customer['email_marketing_consent']['state'] ?? null;
 
         if ($emailConsent === 'unsubscribed') {
