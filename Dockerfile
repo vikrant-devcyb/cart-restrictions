@@ -28,4 +28,4 @@ RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data .
 EXPOSE 8000
 
 # Start Laravel app (runtime stage)
-CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan key:generate && php artisan migrate --force && php artisan shopify:inject-scripttag browns-staging.myshopify.com && php artisan serve --host=0.0.0.0 --port=8000
