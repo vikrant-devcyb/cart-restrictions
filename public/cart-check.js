@@ -67,7 +67,7 @@ async function validateCartBeforeCheckout() {
             return false;
         }
 
-        const url = `/apps/location-check-v2?shop=${shop}&variant_ids=${variantIds}`;
+        const url = `/apps/check-single-location?shop=${shop}&variant_ids=${variantIds}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -277,7 +277,7 @@ async function unsubscribeCustomer(email, shop) {
     showLoader();
 
     try {
-        const url = `/apps/location-check-v2?action=unsubscribe&email=${encodeURIComponent(email)}&shop=${encodeURIComponent(shop)}`;
+        const url = `/apps/check-single-location?action=unsubscribe&email=${encodeURIComponent(email)}&shop=${encodeURIComponent(shop)}`;
         const response = await fetch(url);
         const data = await response.json();
         if (data.message) {
