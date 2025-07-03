@@ -156,7 +156,6 @@ class ProxyController extends Controller
         }
 
         $accessToken = $shop->access_token;
-
         // Search customer by email
         $searchResponse = Http::withHeaders([
             'X-Shopify-Access-Token' => $accessToken,
