@@ -1,5 +1,5 @@
 // CHECKOUT BUTTON HANDLE CODE
-console.log("CartCheckJS Railway..!");
+console.log("CartCheckJS Railway.!!");
 let lastVariantIds = '';
 let locationTagCache = null;
 
