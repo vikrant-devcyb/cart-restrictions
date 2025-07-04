@@ -1,5 +1,5 @@
 <script>
-    console.log("✅ cart-check.js loaded");
+    console.log("cart-check.js loaded");
 
     async function checkCart() {
         console.log("Checking cart...");
