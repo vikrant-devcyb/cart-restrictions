@@ -30,6 +30,7 @@ class ShopifyInjectScriptTag extends Command
             'X-Shopify-Access-Token' => $accessToken
         ])->get("https://{$shopDomain}/admin/api/2024-04/script_tags.json");
 
+        echo"<pre>"; print_r($scriptUrl);  echo"<br>";
         echo"<pre>"; print_r($accessToken);  echo"<br>";
         // echo"<pre>"; print_r($response);  die;
         if (!$response->successful()) {
