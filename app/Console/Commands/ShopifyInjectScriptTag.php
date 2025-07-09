@@ -32,7 +32,6 @@ class ShopifyInjectScriptTag extends Command
 
         // echo"<pre>"; print_r($accessToken);  echo"<br>";
         // echo"<pre>"; print_r($response);  die;
-
         if (!$response->successful()) {
             $this->error("Failed to fetch ScriptTags: " . $response->body());
             return;
