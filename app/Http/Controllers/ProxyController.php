@@ -32,7 +32,7 @@ class ProxyController extends Controller
             return response()->json(['error' => 'Access token not found'], 403);
         }
 
-        // try {
+       
             $locationsResp = Http::withHeaders([
                 'X-Shopify-Access-Token' => $accessToken
             ])->get("https://{$shop}/admin/api/2024-04/locations.json");
@@ -100,10 +100,7 @@ class ProxyController extends Controller
                 'conflicts' => count($uniqueLocations) > 1 ? $conflicts : []
             ]);
 
-        // } catch (\Exception $e) {
-        //     Log::error('Proxy handler exception', ['exception' => $e->getMessage()]);
-        //     return response()->json(['error' => 'Internal server error'], 500);
-        // }
+        
     }
 
     /**
