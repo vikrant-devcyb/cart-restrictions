@@ -239,7 +239,7 @@ function bindDynamicCheckoutButtons() {
 
                 const allowed = await validateCartBeforeCheckout();
                 if (allowed) {
-                    window.location.href = '/checkout';
+                    //window.location.href = '/checkout';
                 } else {
                     button.disabled = false;
                     console.warn("Drawer checkout blocked by validation.");
