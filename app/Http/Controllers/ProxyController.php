@@ -57,7 +57,7 @@ class ProxyController extends Controller
                 }
                 $variant = $variantResp['variant'];
 
-                echo"<pre>"; print_r($variant);  die;
+                // echo"<pre>"; print_r($variant);  die;
 
                 // Fetch product
                 $productResp = Http::withHeaders([
@@ -80,7 +80,7 @@ class ProxyController extends Controller
 
                 $levels = $inventoryResp['inventory_levels'];
 
-                echo"<pre>"; print_r($levels);  die;
+                // echo"<pre>"; print_r($levels);  die;
 
                 if (!empty($levels)) {
                     $locationId = $levels[0]['location_id'];
