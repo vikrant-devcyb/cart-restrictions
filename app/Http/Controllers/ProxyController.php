@@ -43,7 +43,7 @@ class ProxyController extends Controller
 
             $allLocations = [];
             $conflicts = [];
-
+echo"<pre>"; print_r($variantIds);  die;
             foreach ($variantIds as $variantId) {
                 $variantResp = Http::withHeaders([
                     'X-Shopify-Access-Token' => $accessToken
