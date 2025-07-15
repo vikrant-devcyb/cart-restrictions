@@ -43,21 +43,16 @@ class ProxyController extends Controller
 
             $allLocations = [];
             $conflicts = [];
-            // echo"<pre>"; print_r($accessToken);  echo"<br>";
             foreach ($variantIds as $variantId) {
                 $variantResp = Http::withHeaders([
                     'X-Shopify-Access-Token' => $accessToken
                 ])->get("https://{$shop}/admin/api/2024-04/variants/{$variantId}.json");
-
-                // echo"<pre>"; print_r($variantResp);  die;
 
                 if (!$variantResp->successful()) {
                     Log::error('Failed to fetch variant', ['variant_id' => $variantId]);
                     continue;
                 }
                 $variant = $variantResp['variant'];
-
-                // echo"<pre>"; print_r($variant);  die;
 
                 // Fetch product
                 $productResp = Http::withHeaders([
@@ -79,9 +74,6 @@ class ProxyController extends Controller
                 }
 
                 $levels = $inventoryResp['inventory_levels'];
-
-                // echo"<pre>"; print_r($levels);  die;
-
                 if (!empty($levels)) {
                     $locationId = $levels[0]['location_id'];
                     $locationName = $locationMap[$locationId] ?? 'Unknown location';
