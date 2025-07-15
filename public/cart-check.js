@@ -1,7 +1,7 @@
 // CHECKOUT BUTTON HANDLE CODE
-console.log("CartCheckJS Railway..!!");
-let lastVariantIds = '';
-let locationTagCache = null;
+console.warn("CartCheckJS Railway..!!");
+let lastVariantIdsss = '';
+let locationTagCachess = null;
 
 // Loader
 function showLoader() {
@@ -45,7 +45,7 @@ function showToast(message) {
 
 // Main validation
 async function validateCartBeforeCheckout() {
-    console.log("Validating cart before checkout...");
+    console.warn("Validating cart before checkout...");
     showLoader();
 
     try {
@@ -269,69 +269,6 @@ function bindDynamicCheckoutButtons() {
   observer.observe(document.body, { childList: true, subtree: true });
 })();
 
-async function unsubscribeCustomer(email, shop) {
-    if (!email) {
-        updateStatusMessage("No email found to unsubscribe.", 'error');
-        return;
-    }
-    showLoader();
-
-    try {
-        const url = `/apps/single-location-checkout-contr?action=unsubscribe&email=${encodeURIComponent(email)}&shop=${encodeURIComponent(shop)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (data.message) {
-            updateStatusMessage(data.message, 'success');
-        } else if (data.error) {
-            updateStatusMessage("Error: " + data.error, 'error');
-        } else {
-            updateStatusMessage("Unexpected response from unsubscribe API.", 'error');
-        }
-    } catch (err) {
-        console.error("Error unsubscribing customer:", err);
-        updateStatusMessage("Error unsubscribing customer. Please try again later.", 'error');
-    } finally {
-        hideLoader();
-    }
-}
-
-(function(){
-    const urlParams = new URLSearchParams(window.location.search);
-    let email = urlParams.get('email');
-    if (email) {
-        email = email.split('?')[0].trim();
-    }
-
-    const shop = window.Shopify && window.Shopify.shop ? window.Shopify.shop : '';
-    const isUnsubscribePage = window.location.pathname.includes('/unsubscribe');
-    if (isUnsubscribePage) {
-        const unsubscribeBtn = document.getElementById('unsubscribeButton');
-        if (unsubscribeBtn) {
-            unsubscribeBtn.addEventListener('click', function(){
-                unsubscribeCustomer(email, shop);
-            });
-        } else {
-            if (email) {
-                unsubscribeCustomer(email, shop);
-            } else {
-                updateStatusMessage("No email provided in URL to unsubscribe.", 'error');
-            }
-        }
-    }
-})();
-
-function updateStatusMessage(message, type = 'info') {
-    const statusElement = document.getElementById('statusMessage');
-    if (statusElement) {
-        statusElement.classList.remove('success', 'error', 'warning', 'info');
-        statusElement.classList.add(type);
-        statusElement.textContent = message;
-    } else {
-        console.warn('Status message element not found on the page.');
-    }
-}
-
-
 // ===========================
-// END UNSUBSCRIBE FUNCTIONALITY
+// END FUNCTIONALITY
 // ===========================

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Shop;
+use App\Jobs\InjectScriptTagToShop;
 
 class ShopifyController extends Controller
 {
@@ -46,31 +47,8 @@ class ShopifyController extends Controller
         session(['shop' => $shop, 'access_token' => $accessToken]);
 
         // Inject ScriptTag with APP_URL
-        $this->injectScriptTag($shop, $accessToken);
-
+        InjectScriptTagToShop::dispatch($shop, $accessToken);
         return view('shopify.installed', ['shop' => $shop]);
-    }
-
-    private function injectScriptTag($shop, $accessToken)
-    {
-        $scriptUrl = rtrim(env('APP_URL'), '/') . '/cart-check.js';
-
-        Log::info("Injecting ScriptTag", ['shop' => $shop, 'src' => $scriptUrl]);
-        $response = Http::withHeaders([
-            'X-Shopify-Access-Token' => $accessToken,
-        ])->post("https://{$shop}/admin/api/2024-04/script_tags.json", [
-            'script_tag' => [
-                'event' => 'onload',
-                'src'   => $scriptUrl,
-            ],
-        ]);
-
-        if ($response->status() == 201) {
-            $scriptTagId = $response['script_tag']['id'] ?? 'unknown';
-            Log::info("ScriptTag injected successfully! ID: {$scriptTagId}");
-        } else {
-            $this->error("Failed to inject ScriptTag: " . $response->body());
-        }
     }
 
     private function validateHmac($params, $hmac)
