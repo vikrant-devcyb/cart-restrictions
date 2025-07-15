@@ -76,6 +76,9 @@ class ProxyController extends Controller
 
                 $levels = $inventoryResp['inventory_levels'];
                 echo"<pre>"; print_r($levels);  die;
+
+                return response()->json(['error' => 'Internal server error', 'data' => $levels], 500);
+
                 if (!empty($levels)) {
                     $locationId = $levels[0]['location_id'];
                     $locationName = $locationMap[$locationId] ?? 'Unknown location';
