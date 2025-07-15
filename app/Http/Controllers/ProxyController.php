@@ -75,6 +75,9 @@ class ProxyController extends Controller
                 }
 
                 $levels = $inventoryResp['inventory_levels'];
+
+                echo"<pre>"; print_r($levels);  die;
+
                 if (!empty($levels)) {
                     $locationId = $levels[0]['location_id'];
                     $locationName = $locationMap[$locationId] ?? 'Unknown location';
