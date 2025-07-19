@@ -5,6 +5,16 @@ use App\Http\Controllers\ShopifyController;
 use App\Http\Controllers\ProxyController;
 use App\Helpers\ShopStorage;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Artisan;
+
+Route::get('/clear-cache', function () {
+    Artisan::call('config:clear');
+    Artisan::call('cache:clear');
+    Artisan::call('route:clear');
+    Artisan::call('view:clear');
+    
+    return 'Config, cache, route, and view caches cleared!';
+});
 
 Route::get('/cart-check.js', function () {
     return response()->view('js.cart-check')->header('Content-Type', 'application/javascript');
