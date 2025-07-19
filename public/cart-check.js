@@ -1,7 +1,24 @@
-// CHECKOUT BUTTON HANDLE CODE
-console.warn("CartCheckJS Railway..!!!");
-let lastVariantIdsss = '';
-let locationTagCachess = null;
+console.warn("BeReady.!");
+let lastVariantIds = '';
+let locationTagCache = null;
+
+(function loadExternalCSS() {
+    const cssUrl = 'https://exercises-vital-socks-gt.trycloudflare.com/cart.css'; // Update this URL
+    if (!document.querySelector(`link[href="${cssUrl}"]`)) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssUrl;
+        link.type = 'text/css';
+        link.media = 'all';
+        document.head.appendChild(link);
+    }
+})();
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadExternalCSS);
+} else {
+    loadExternalCSS();
+}
 
 // Loader
 function showLoader() {
@@ -29,7 +46,6 @@ function hideLoader() {
     if (loader) loader.style.display = 'none';
 }
 
-// Toast
 function showToast(message) {
     let toast = document.getElementById('location-conflict-toast');
     if (!toast) {
@@ -43,7 +59,6 @@ function showToast(message) {
     setTimeout(() => { toast.style.display = 'none'; }, 6000);
 }
 
-// Main validation
 async function validateCartBeforeCheckout() {
     console.warn("Validating cart before checkout...");
     showLoader();
@@ -67,15 +82,15 @@ async function validateCartBeforeCheckout() {
             return false;
         }
 
-        const url = `/apps/single-location-checkout-contr?shop=${shop}&variant_ids=${variantIds}`;
+        const url = `/apps/local-check-single-location?shop=${shop}&variant_ids=${variantIds}`;
         const response = await fetch(url);
         const data = await response.json();
 
         if (!data.allow_checkout) {
             const conflicts = data.conflicts || [];
             window.conflictData = conflicts;
-            insertLocationTagsInCart(conflicts);  // ✅ No duplicate API call
-            showConflictModal();
+            insertLocationTagsInCart(conflicts);
+            injectLocationButtons(conflicts);
             hideLoader();
             return false;
         }
@@ -91,129 +106,239 @@ async function validateCartBeforeCheckout() {
     }
 }
 
-// Minimal Warning Modal
-function showConflictModal() {
-    let modal = document.getElementById('location-conflict-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'location-conflict-modal';
-        modal.style = `
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-        modal.innerHTML = `
-            <div class="simple-warning-modal">
-                <button id="close-conflict-modal" class="warning-close">×</button>
-                <div class="warning-header">🚫 Shipping Conflict Detected</div>
-                <div class="warning-message">
-                    Your cart contains items from multiple locations.<br>
-                    Please ensure all products come from the same location to proceed with checkout.
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
+// function insertLocationTagsInCart(conflicts) {
+//     try {
+//         if (!conflicts || conflicts.length === 0) return;
 
-        if (!document.getElementById('simple-warning-style')) {
-            const style = document.createElement('style');
-            style.id = 'simple-warning-style';
-            style.innerHTML = `
-                .simple-warning-modal {
-                    background: #1b1b2d;
-                    border-radius: 10px;
-                    padding: 24px;
-                    max-width: 500px;
-                    width: 90%;
-                    color: #fff;
-                    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-                    animation: fadeIn 0.3s ease-out;
-                    position: relative;
-                    font-family: 'Segoe UI', sans-serif;
-                    text-align: center;
-                }
-                .warning-close {
-                    position: absolute;
-                    top: 10px; right: 10px;
-                    background: #444;
-                    color: #fff;
-                    border: none;
-                    border-radius: 50%;
-                    width: 30px; height: 30px;
-                    font-size: 20px;
-                    cursor: pointer;
-                }
-                .warning-close:hover {
-                    background: #666;
-                }
-                .warning-header {
-                    font-size: 20px;
-                    font-weight: bold;
-                    margin-bottom: 16px;
-                    color: #ffc107;
-                }
-                .warning-message {
-                    font-size: 15px;
-                    color: #f0f0f0;
-                    line-height: 1.6;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
+//         conflicts.forEach(item => {
+//             const sku = item.sku;
+//             const sizeFromName = item.name?.match(/- (\d+)\s*\/|Size: (\d+)/);
+//             const size = sizeFromName ? (sizeFromName[1] || sizeFromName[2]) : null;
+
+//             if (!sku || !size) return;
+
+//             const dlElements = Array.from(document.querySelectorAll('dl')).filter(dl => {
+//                 const text = dl.textContent.replace(/\s+/g, ' ').trim();
+//                 return text.includes(sku) && text.match(new RegExp(`Size:\\s*${size}`));
+//             });
+
+//             if (!dlElements.length) return;
+
+//             dlElements.forEach(dl => {
+//                 if (dl.querySelector('.location-tag')) return;
+
+//                 const locationTag = document.createElement('div');
+//                 locationTag.className = 'location-tag';
+//                 locationTag.textContent = `Shipping From ${item.location}`;
+//                 locationTag.style.cssText = 'font-family: NHaasGrotesk-Regular; letter-spacing: .05rem; line-height: 1.7; font-size: 14px; text-transform: capitalize; color:#df1818;';
+//                 dl.appendChild(locationTag);
+//             });
+//         });
+//     } catch (err) {
+//         console.warn('[Location Tag Error]', err);
+//     }
+// }
+
+function insertLocationTagsInCart(conflicts) {
+    try {
+        if (!conflicts || conflicts.length === 0) return;
+
+        // Create a map of key -> location
+        const locationMap = {};
+        for (const item of conflicts) {
+            const key = `${item.sku}-${item.size}`;
+            locationMap[key] = item.location;
         }
 
-        document.getElementById('close-conflict-modal').onclick = () => {
-            modal.style.display = 'none';
-        };
+        // Process both cart and drawer
+        const dlElements = document.querySelectorAll('dl');
+
+        dlElements.forEach(dl => {
+            const text = dl.textContent.replace(/\s+/g, ' ').trim();
+
+            // Extract SKU and Size
+            const skuMatch = text.match(/VendorSKU:\s*([^\s,]+)/i);
+            const sizeMatch = text.match(/Size:\s*([^\s,]+)/i);
+
+            if (!skuMatch || !sizeMatch) return;
+
+            const sku = skuMatch[1].trim();
+            const size = sizeMatch[1].trim();
+            const key = `${sku}-${size}`;
+
+            const location = locationMap[key];
+            if (!location) return;
+
+            // Avoid duplicates
+            if (dl.querySelector('.location-tag')) return;
+
+            const locationTag = document.createElement('div');
+            locationTag.className = 'location-tag';
+            locationTag.textContent = `Shipping From ${location}`;
+            locationTag.style.cssText = 'font-family: NHaasGrotesk-Regular; letter-spacing: .05rem; line-height: 1.7; font-size: 14px; text-transform: capitalize; color:#df1818; margin-top: 6px;';
+            dl.appendChild(locationTag);
+        });
+    } catch (err) {
+        console.warn('[Location Tag Error]', err);
     }
-
-    modal.style.display = 'flex';
 }
 
-// Inject location tags (no API calls)
-function insertLocationTagsInCart(conflicts) {
-  try {
-    if (!conflicts || conflicts.length === 0) return;
+// function injectLocationButtons(conflicts) {
+//     const containers = [
+//         document.querySelector('.cartBox'),
+//         document.querySelector('.drawer__header')
+//     ].filter(Boolean);
 
-    conflicts.forEach(item => {
-      const sku = item.sku;
-      const dlElements = Array.from(document.querySelectorAll('dl')).filter(dl => dl.textContent.includes(sku));
-      if (!dlElements.length) return;
+//     if (containers.length === 0 || !conflicts || conflicts.length < 2) return;
 
-      dlElements.forEach(dl => {
-        if (dl.querySelector('.location-tag')) return;
+//     containers.forEach(container => {
+//         const existing = container.querySelector('#location-filter-section');
+//         if (existing) existing.remove();
 
-        const locationTag = document.createElement('div');
-        locationTag.className = 'location-tag';
-        locationTag.textContent = `Available from: ${item.location}`;
-        locationTag.style.cssText = 'font-family: NHaasGrotesk-Regular; letter-spacing: .05rem; line-height: 1.7; font-size: 14px; text-transform: capitalize; color:#df1818;';
-        dl.appendChild(locationTag);
-      });
+//         const wrapper = document.createElement('div');
+//         wrapper.id = 'location-filter-section';
+//         wrapper.style = `margin-top: 25px; font-family: 'NHaasGrotesk-Regular', sans-serif; display: flex`;
+
+//         const message = document.createElement('div');
+//         message.textContent = "Your order cannot be completed since these products are being shipped from different location. Please remove a product before proceeding to checkout.";
+//         message.style = `color: #df1818; font-size: 14px; margin-bottom: 14px; line-height: 1.6; width: 68%;`;
+
+//         const buttonWrapper = document.createElement('div');
+//         buttonWrapper.style = 'text-align: right;';
+
+//         const result = conflicts.reduce((acc, item) => {
+//             const key = `${item.sku}-${item.size}`;
+//             acc.grouped[item.location] = acc.grouped[item.location] || [];
+//             acc.grouped[item.location].push(key);
+//             acc.locationByName[key] = item.location;
+//             return acc;
+//         }, { grouped: {}, locationByName: {} });
+
+//         Object.entries(result.grouped).forEach(([location, validKeys]) => {
+//             const btn = document.createElement('button');
+//             btn.textContent = `Keep products from ${location}`;
+//             btn.style = `border: 1px solid #000; background: #fff; padding: 10px 18px; font-size: 14px; cursor: pointer; width: 48%; margin: 3px;`;
+//             btn.addEventListener('click', async (e) => {
+//                 e.preventDefault();
+//                 e.stopPropagation();
+//                 showLoader();
+//                 await removeOtherLocationProductsByLocation(location, result.locationByName, validKeys);
+//             });
+
+//             buttonWrapper.appendChild(btn);
+//         });
+
+//         wrapper.appendChild(message);
+//         wrapper.appendChild(buttonWrapper);
+//         container.appendChild(wrapper);
+//     });
+// }
+
+function injectLocationButtons(conflicts) {
+    const containers = [
+        { el: document.querySelector('.cartBox'), type: 'cartPage' },
+        { el: document.querySelector('.drawer__header'), type: 'drawerRight' }
+    ].filter(c => c.el); // Only valid ones
+
+    if (containers.length === 0 || !conflicts || conflicts.length < 2) return;
+
+    // Prepare grouped data
+    const result = conflicts.reduce((acc, item) => {
+        const key = `${item.sku}-${item.size}`;
+        acc.grouped[item.location] = acc.grouped[item.location] || [];
+        acc.grouped[item.location].push(key);
+        acc.locationByName[key] = item.location;
+        return acc;
+    }, { grouped: {}, locationByName: {} });
+
+    containers.forEach(({ el: container, type }) => {
+        const wrapperId = type === 'cartPage' ? 'location-filter-section-cart' : 'location-filter-section-drawerRight';
+
+        const existing = container.querySelector(`#${wrapperId}`);
+        if (existing) existing.remove();
+
+        const wrapper = document.createElement('div');
+        wrapper.id = wrapperId;
+        wrapper.className = `location-filter-wrapper ${type}`;
+
+        const message = document.createElement('div');
+        message.className = 'leftDiv';
+        message.textContent = "Your order cannot be completed since these products are being shipped from different location. Please remove a product before proceeding to checkout.";
+
+        const buttonWrapper = document.createElement('div');
+        buttonWrapper.className = 'rightDiv';
+
+        Object.entries(result.grouped).forEach(([location, validKeys]) => {
+            const btn = document.createElement('button');
+            btn.textContent = `Keep products from ${location}`;
+            btn.className = `location-btn ${type}`; // You can style `.location-btn.drawer` separately if needed
+            btn.style = `
+               
+            `;
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showLoader();
+                await removeOtherLocationProductsByLocation(location, result.locationByName, validKeys);
+            });
+
+            buttonWrapper.appendChild(btn);
+        });
+
+        wrapper.appendChild(message);
+        wrapper.appendChild(buttonWrapper);
+        container.appendChild(wrapper);
     });
-  } catch (err) {
-    console.warn('[Location Tag Error]', err);
-  }
 }
 
-// Form & button binding
+async function removeOtherLocationProductsByLocation(selectedLocation, locationByName, validKeys) {
+    try {
+        const cartResp = await fetch('/cart.js');
+        const cartData = await cartResp.json();
+        const items = cartData.items;
+
+        for (const item of items) {
+            const itemSku = item.sku || '';
+            const itemKey = item.key;
+
+            let itemSize = item.options_with_values?.find(opt => opt.name === "Size")?.value || '';
+            if (!itemSize) {
+                const sizeFromTitle = item.title.match(/-\s*(\d+(?:\.\d+)?)/);
+                itemSize = sizeFromTitle ? sizeFromTitle[1] : '';
+            }
+
+            const key = `${itemSku}-${itemSize}`;
+            const shouldKeep = validKeys.includes(key);
+
+            if (!shouldKeep) {
+                console.log(`Removing item: ${item.title} | key: ${key}`);
+                const resp = await fetch(`/cart/change.js`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: itemKey, quantity: 0 })
+                });
+
+                const resJson = await resp.json();
+                console.log(`✔ Removed: ${item.title}`, resJson);
+            }
+        }
+
+        hideLoader();
+        window.location.reload();
+    } catch (err) {
+        console.error("Error during location-based cleanup:", err);
+        hideLoader();
+        showToast("Failed to update cart. Please try again.");
+    }
+}
+
 function bindCheckoutValidation() {
     document.querySelectorAll('form[action="/checkout"]').forEach(form => {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             e.stopPropagation();
             const allowed = await validateCartBeforeCheckout();
-            if (allowed) {
-                form.submit();
-            } else {
-                console.warn("Checkout blocked by location validation.");
-            }
+            if (allowed) form.submit();
         });
     });
 
@@ -226,23 +351,19 @@ function bindCheckoutValidation() {
     observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Dynamic buttons
 function bindDynamicCheckoutButtons() {
-    document.querySelectorAll('#CartDrawer-Checkout, #cHeckOout_1').forEach(button => {
+    document.querySelectorAll('#CartDrawer-Checkout, #LocalcHeckOoutlocal').forEach(button => {
         if (button.dataset.bound !== "true") {
             button.dataset.bound = "true";
             button.addEventListener('click', async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 button.disabled = true;
-                console.log('Drawer Checkout Clicked');
-
                 const allowed = await validateCartBeforeCheckout();
                 if (allowed) {
                     window.location.href = '/checkout';
                 } else {
                     button.disabled = false;
-                    console.warn("Drawer checkout blocked by validation.");
                 }
             });
         }
@@ -251,24 +372,19 @@ function bindDynamicCheckoutButtons() {
 
 // Initialize
 (function () {
-  const init = () => {
-    bindCheckoutValidation(); // no more insertLocationTagsInCart here
-  };
+    const init = () => {
+        bindCheckoutValidation();
+    };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
-  // No insertLocationTagsInCart in observer either
-  const observer = new MutationObserver(() => {
-    bindCheckoutValidation();
-  });
+    const observer = new MutationObserver(() => {
+        bindCheckoutValidation();
+    });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
 })();
-
-// ===========================
-// END FUNCTIONALITY
-// ===========================

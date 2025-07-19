@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\Shop;
+use App\Helpers\ShopStorage;
 
 class ProxyController extends Controller
 {
@@ -37,10 +37,18 @@ class ProxyController extends Controller
                 'X-Shopify-Access-Token' => $accessToken
             ])->get("https://{$shop}/admin/api/2024-04/locations.json");
 
-            $locationMap = collect($locationsResp['locations'] ?? [])
-                ->mapWithKeys(fn($loc) => [$loc['id'] => $loc['name']])
-                ->toArray();
+            // $locationMap = collect($locationsResp['locations'] ?? [])
+            //     ->mapWithKeys(fn($loc) => [$loc['id'] => $loc['name']])
+            //     ->toArray();
 
+            $locationMap = collect($locationsResp['locations'] ?? [])
+                ->mapWithKeys(function ($loc) {
+                    $cleanName = preg_replace('/^\d+\s*\|\s*/', '', $loc['name']); // removes "1 | ", "2 | " etc
+                    return [$loc['id'] => $cleanName];
+                })
+                ->toArray();
+            // echo"<pre>"; print_r($locationMap);  die;
+                
             $allLocations = [];
             $conflicts = [];
             foreach ($variantIds as $variantId) {
@@ -60,6 +68,10 @@ class ProxyController extends Controller
                 ])->get("https://{$shop}/admin/api/2024-04/products/{$variant['product_id']}.json");
 
                 $productTitle = $productResp['product']['title'] ?? 'Product';
+                $rawTitle = $variant['title'];
+                $exploded = explode(' / ', $rawTitle);
+                $size = trim($exploded[0]);
+                $sku = $variant['sku'];
 
                 // Fetch inventory levels
                 $inventoryResp = Http::withHeaders([
@@ -78,11 +90,12 @@ class ProxyController extends Controller
                     $locationId = $levels[0]['location_id'];
                     $locationName = $locationMap[$locationId] ?? 'Unknown location';
                     $allLocations[] = $locationId;
-
+                    
                     $conflicts[] = [
                         'name' => "{$productTitle} - {$variant['title']} / {$variant['sku']}",
                         'location' => $locationName,
-                        'sku' => @$variant['sku']
+                        'sku' => @$variant['sku'],
+                        'size' => $size
                     ];
                 }
             }
@@ -130,9 +143,13 @@ class ProxyController extends Controller
 
     private function getShopToken($shop)
     {
-        $shopRecord = Shop::where('shopify_domain', $shop)->first();
-        return $shopRecord ? $shopRecord->access_token : null;
+        $encrypted = ShopStorage::get($shop);
+        if (!$encrypted) {
+            return null;
+        }
+        return ShopStorage::decryptToken($encrypted);
     }
+
 
 }
 

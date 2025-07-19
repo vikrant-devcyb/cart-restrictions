@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShopifyController;
 use App\Http\Controllers\ProxyController;
-use App\Models\Shop;
+use App\Helpers\ShopStorage;
 use Illuminate\Support\Facades\Request;
 
 Route::get('/cart-check.js', function () {
@@ -15,7 +15,8 @@ Route::get('/shopify/install', [ShopifyController::class, 'install']);
 Route::get('/shopify/callback', [ShopifyController::class, 'callback'])->name('shopify.callback');
 
 // App proxy handler
-Route::get('/checkout-proxy-handler', [ProxyController::class, 'handle']);
+Route::get('/proxy-handler-local', [ProxyController::class, 'handle']);
+// Route::get('/checkout-proxy-handler', [ProxyController::class, 'handle']);
 
 Route::get('/', function (Request $request) {
     $shop = request()->get('shop'); // Get ?shop= param if passed
@@ -24,9 +25,10 @@ Route::get('/', function (Request $request) {
         return view('welcome');
         //return response("Missing shop parameter.", 400);
     }
-    $shopRecord = Shop::where('shopify_domain', $shop)->first();
+    $encrypted = ShopStorage::get($shop);
+    $accessToken = ShopStorage::decryptToken($encrypted);
 
-    if ($shopRecord) {
+    if ($accessToken) {
         return view('shopify.dashboard', ['shop' => $shop]);
     } else {
         return view('shopify.not_installed', ['shop' => $shop]);

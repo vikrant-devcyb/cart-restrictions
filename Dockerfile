@@ -18,7 +18,7 @@ WORKDIR /var/www
 # Copy app files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies (no dev dependencies for production)
 RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions
@@ -27,5 +27,8 @@ RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data .
 # Expose port
 EXPOSE 8000
 
-# Start Laravel app (runtime stage)
-CMD php artisan key:generate && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000
+# Entrypoint script to handle setup before server starts
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]

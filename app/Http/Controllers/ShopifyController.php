@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Models\Shop;
 use App\Jobs\InjectScriptTagToShop;
+use App\Helpers\ShopStorage;
 
 class ShopifyController extends Controller
 {
@@ -37,13 +37,19 @@ class ShopifyController extends Controller
             'code' => $code,
         ]);
 
+        if (!$response->successful() || !isset($response['access_token'])) {
+            Log::error('Failed to get access token', ['response' => $response->json()]);
+            abort(500, 'Failed to authenticate with Shopify');
+        }
+
+
         $accessToken = $response['access_token'];
 
-        Shop::updateOrCreate(
-            ['shopify_domain' => $shop],
-            ['access_token' => $accessToken]
-        );
-
+        // Shop::updateOrCreate(
+        //     ['shopify_domain' => $shop],
+        //     ['access_token' => $accessToken]
+        // );
+        ShopStorage::set($shop, $accessToken);
         session(['shop' => $shop, 'access_token' => $accessToken]);
 
         // Inject ScriptTag with APP_URL
