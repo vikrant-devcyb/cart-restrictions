@@ -1,10 +1,9 @@
 console.warn("BeReady.!!");
 let lastVariantIds = '';
 let locationTagCache = null;
-window.APP_URL = "{{ config('app.url') }}";
 
 (function loadExternalCSS() {
-    const baseUrl = window.APP_URL || 'https://browns-shopify-app-production.up.railway.app';
+    const baseUrl = 'https://browns-shopify-app-production.up.railway.app';
     const cssUrl = `${baseUrl}/cart.css`;
     if (!document.querySelector(`link[href="${cssUrl}"]`)) {
         const link = document.createElement('link');
