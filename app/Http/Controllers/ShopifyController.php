@@ -44,11 +44,6 @@ class ShopifyController extends Controller
 
 
         $accessToken = $response['access_token'];
-
-        // Shop::updateOrCreate(
-        //     ['shopify_domain' => $shop],
-        //     ['access_token' => $accessToken]
-        // );
         ShopStorage::set($shop, $accessToken);
         session(['shop' => $shop, 'access_token' => $accessToken]);
 

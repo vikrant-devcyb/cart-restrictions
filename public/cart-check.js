@@ -1,9 +1,11 @@
-console.warn("BeReady.!");
+console.warn("BeReady.!!");
 let lastVariantIds = '';
 let locationTagCache = null;
+window.APP_URL = "{{ config('app.url') }}";
 
 (function loadExternalCSS() {
-    const cssUrl = 'https://exercises-vital-socks-gt.trycloudflare.com/cart.css'; // Update this URL
+    const baseUrl = window.APP_URL || 'https://browns-shopify-app-production.up.railway.app';
+    const cssUrl = `${baseUrl}/cart.css`;
     if (!document.querySelector(`link[href="${cssUrl}"]`)) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -82,7 +84,7 @@ async function validateCartBeforeCheckout() {
             return false;
         }
 
-        const url = `/apps/local-check-single-location?shop=${shop}&variant_ids=${variantIds}`;
+        const url = `/apps/single-location-checkout-contr?shop=${shop}&variant_ids=${variantIds}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -105,39 +107,6 @@ async function validateCartBeforeCheckout() {
         return false;
     }
 }
-
-// function insertLocationTagsInCart(conflicts) {
-//     try {
-//         if (!conflicts || conflicts.length === 0) return;
-
-//         conflicts.forEach(item => {
-//             const sku = item.sku;
-//             const sizeFromName = item.name?.match(/- (\d+)\s*\/|Size: (\d+)/);
-//             const size = sizeFromName ? (sizeFromName[1] || sizeFromName[2]) : null;
-
-//             if (!sku || !size) return;
-
-//             const dlElements = Array.from(document.querySelectorAll('dl')).filter(dl => {
-//                 const text = dl.textContent.replace(/\s+/g, ' ').trim();
-//                 return text.includes(sku) && text.match(new RegExp(`Size:\\s*${size}`));
-//             });
-
-//             if (!dlElements.length) return;
-
-//             dlElements.forEach(dl => {
-//                 if (dl.querySelector('.location-tag')) return;
-
-//                 const locationTag = document.createElement('div');
-//                 locationTag.className = 'location-tag';
-//                 locationTag.textContent = `Shipping From ${item.location}`;
-//                 locationTag.style.cssText = 'font-family: NHaasGrotesk-Regular; letter-spacing: .05rem; line-height: 1.7; font-size: 14px; text-transform: capitalize; color:#df1818;';
-//                 dl.appendChild(locationTag);
-//             });
-//         });
-//     } catch (err) {
-//         console.warn('[Location Tag Error]', err);
-//     }
-// }
 
 function insertLocationTagsInCart(conflicts) {
     try {
@@ -182,57 +151,6 @@ function insertLocationTagsInCart(conflicts) {
         console.warn('[Location Tag Error]', err);
     }
 }
-
-// function injectLocationButtons(conflicts) {
-//     const containers = [
-//         document.querySelector('.cartBox'),
-//         document.querySelector('.drawer__header')
-//     ].filter(Boolean);
-
-//     if (containers.length === 0 || !conflicts || conflicts.length < 2) return;
-
-//     containers.forEach(container => {
-//         const existing = container.querySelector('#location-filter-section');
-//         if (existing) existing.remove();
-
-//         const wrapper = document.createElement('div');
-//         wrapper.id = 'location-filter-section';
-//         wrapper.style = `margin-top: 25px; font-family: 'NHaasGrotesk-Regular', sans-serif; display: flex`;
-
-//         const message = document.createElement('div');
-//         message.textContent = "Your order cannot be completed since these products are being shipped from different location. Please remove a product before proceeding to checkout.";
-//         message.style = `color: #df1818; font-size: 14px; margin-bottom: 14px; line-height: 1.6; width: 68%;`;
-
-//         const buttonWrapper = document.createElement('div');
-//         buttonWrapper.style = 'text-align: right;';
-
-//         const result = conflicts.reduce((acc, item) => {
-//             const key = `${item.sku}-${item.size}`;
-//             acc.grouped[item.location] = acc.grouped[item.location] || [];
-//             acc.grouped[item.location].push(key);
-//             acc.locationByName[key] = item.location;
-//             return acc;
-//         }, { grouped: {}, locationByName: {} });
-
-//         Object.entries(result.grouped).forEach(([location, validKeys]) => {
-//             const btn = document.createElement('button');
-//             btn.textContent = `Keep products from ${location}`;
-//             btn.style = `border: 1px solid #000; background: #fff; padding: 10px 18px; font-size: 14px; cursor: pointer; width: 48%; margin: 3px;`;
-//             btn.addEventListener('click', async (e) => {
-//                 e.preventDefault();
-//                 e.stopPropagation();
-//                 showLoader();
-//                 await removeOtherLocationProductsByLocation(location, result.locationByName, validKeys);
-//             });
-
-//             buttonWrapper.appendChild(btn);
-//         });
-
-//         wrapper.appendChild(message);
-//         wrapper.appendChild(buttonWrapper);
-//         container.appendChild(wrapper);
-//     });
-// }
 
 function injectLocationButtons(conflicts) {
     const containers = [
@@ -352,7 +270,7 @@ function bindCheckoutValidation() {
 }
 
 function bindDynamicCheckoutButtons() {
-    document.querySelectorAll('#CartDrawer-Checkout, #LocalcHeckOoutlocal').forEach(button => {
+    document.querySelectorAll('#CartDrawer-Checkout, #cHeckOoutButton').forEach(button => {
         if (button.dataset.bound !== "true") {
             button.dataset.bound = "true";
             button.addEventListener('click', async (e) => {
