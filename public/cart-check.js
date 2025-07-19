@@ -2,24 +2,25 @@ console.warn("BeReady.!!");
 let lastVariantIds = '';
 let locationTagCache = null;
 
-(function loadExternalCSS() {
-    const baseUrl = 'https://browns-shopify-app-production.up.railway.app';
-    const cssUrl = `${baseUrl}/cart.css`;
-    if (!document.querySelector(`link[href="${cssUrl}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = cssUrl;
-        link.type = 'text/css';
-        link.media = 'all';
-        document.head.appendChild(link);
-    }
-})();
+function loadExternalCSS() {
+  const baseUrl = 'https://browns-shopify-app-production.up.railway.app';
+  const cssUrl = `${baseUrl}/cart.css`;
+  if (!document.querySelector(`link[href="${cssUrl}"]`)) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cssUrl;
+    link.type = 'text/css';
+    link.media = 'all';
+    document.head.appendChild(link);
+  }
+}
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadExternalCSS);
+  document.addEventListener('DOMContentLoaded', loadExternalCSS);
 } else {
-    loadExternalCSS();
+  loadExternalCSS();
 }
+
 
 // Loader
 function showLoader() {
