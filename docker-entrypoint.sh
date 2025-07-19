@@ -15,12 +15,12 @@ fi
 
 # Generate app key if not present
 php artisan key:generate --force
+php artisan migrate --force
 
 # Laravel setup
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-# php artisan migrate --force
 
 # Start queue in background
 php artisan queue:work --daemon &
