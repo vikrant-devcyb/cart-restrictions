@@ -3,7 +3,7 @@ let lastVariantIds = '';
 let locationTagCache = null;
 
 function loadExternalCSS() {
-  const baseUrl = 'https://browns-shopify-app-production.up.railway.app';
+  const baseUrl = 'https://d2adbr6adc.eu-west-1.awsapprunner.com';
   const cssUrl = `${baseUrl}/cart.css`;
   if (!document.querySelector(`link[href="${cssUrl}"]`)) {
     const link = document.createElement('link');
@@ -84,7 +84,7 @@ async function validateCartBeforeCheckout() {
             return false;
         }
 
-        const url = `/apps/single-location-checkout-contr?shop=${shop}&variant_ids=${variantIds}`;
+        const url = `/apps/browns-checkout-control?shop=${shop}&variant_ids=${variantIds}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -270,7 +270,7 @@ function bindCheckoutValidation() {
 }
 
 function bindDynamicCheckoutButtons() {
-    document.querySelectorAll('#CartDrawer-Checkout, #cHeckOoutButton').forEach(button => {
+    document.querySelectorAll('#CartDrawer-Checkout, #cHeckOout').forEach(button => {
         if (button.dataset.bound !== "true") {
             button.dataset.bound = "true";
             button.addEventListener('click', async (e) => {

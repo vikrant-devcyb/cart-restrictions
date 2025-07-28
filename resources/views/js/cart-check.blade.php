@@ -17,7 +17,7 @@
             const variantIds = items.map(i => i.variant_id).join(',');
             const shop = "{{ request('shop') ?? '' }}";
 
-            const url = `/apps/single-location-checkout-contr?shop=${shop}&variant_ids=${variantIds}`;
+            const url = `/apps/browns-checkout-control?shop=${shop}&variant_ids=${variantIds}`;
 
             const response = await fetch(url);
             const data = await response.json();
