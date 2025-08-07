@@ -11,7 +11,6 @@ class ProxyController extends Controller
 {
     public function handle(Request $request)
     {
-        // $action = $request->query('action');
         Log::info('Proxy hit', $request->all());
 
         if (!$this->validateSignature($request->all(), $request->get('signature'))) {
@@ -37,20 +36,39 @@ class ProxyController extends Controller
                 'X-Shopify-Access-Token' => $accessToken
             ])->get("https://{$shop}/admin/api/2024-04/locations.json");
 
-            // $locationMap = collect($locationsResp['locations'] ?? [])
-            //     ->mapWithKeys(fn($loc) => [$loc['id'] => $loc['name']])
-            //     ->toArray();
+            // Location name to country mapping
+            $countryMapping = [
+                'NL' => 'Netherlands',
+                'BROOK STREET' => 'UK',
+                'UK' => 'UK',
+                'US' => 'USA',
+                'NY' => 'USA',
+                'DE' => 'Germany',
+            ];
 
+            // Clean and map location name + country
             $locationMap = collect($locationsResp['locations'] ?? [])
-                ->mapWithKeys(function ($loc) {
-                    $cleanName = preg_replace('/^\d+\s*\|\s*/', '', $loc['name']); // removes "1 | ", "2 | " etc
-                    return [$loc['id'] => $cleanName];
+                ->mapWithKeys(function ($loc) use ($countryMapping) {
+                    $cleanName = preg_replace('/^\d+\s*\|\s*/', '', $loc['name']);
+                    $country = 'Unknown';
+
+                    foreach ($countryMapping as $keyword => $mappedCountry) {
+                        if (stripos($cleanName, $keyword) !== false) {
+                            $country = $mappedCountry;
+                            break;
+                        }
+                    }
+
+                    return [$loc['id'] => [
+                        'name' => $cleanName,
+                        'country' => $country
+                    ]];
                 })
                 ->toArray();
-            // echo"<pre>"; print_r($locationMap);  die;
-                
+
             $allLocations = [];
             $conflicts = [];
+
             foreach ($variantIds as $variantId) {
                 $variantResp = Http::withHeaders([
                     'X-Shopify-Access-Token' => $accessToken
@@ -60,6 +78,7 @@ class ProxyController extends Controller
                     Log::error('Failed to fetch variant', ['variant_id' => $variantId]);
                     continue;
                 }
+
                 $variant = $variantResp['variant'];
 
                 // Fetch product
@@ -88,12 +107,16 @@ class ProxyController extends Controller
                 $levels = $inventoryResp['inventory_levels'];
                 if (!empty($levels)) {
                     $locationId = $levels[0]['location_id'];
-                    $locationName = $locationMap[$locationId] ?? 'Unknown location';
+                    $locationInfo = $locationMap[$locationId] ?? ['name' => 'Unknown', 'country' => 'Unknown'];
+                    $locationName = $locationInfo['name'];
+                    $shippingCountry = $locationInfo['country'];
+
                     $allLocations[] = $locationId;
-                    
+
                     $conflicts[] = [
                         'name' => "{$productTitle} - {$variant['title']} / {$variant['sku']}",
                         'location' => $locationName,
+                        'shipping_country' => $shippingCountry,
                         'sku' => @$variant['sku'],
                         'size' => $size
                     ];
@@ -107,7 +130,6 @@ class ProxyController extends Controller
                 'locations' => $uniqueLocations,
                 'conflicts' => count($uniqueLocations) > 1 ? $conflicts : []
             ]);
-
         } catch (\Exception $e) {
             Log::error('Proxy handler exception', ['exception' => $e->getMessage()]);
             return response()->json(['error' => 'Internal server error'], 500);

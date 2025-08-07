@@ -116,7 +116,8 @@ function insertLocationTagsInCart(conflicts) {
         const locationMap = {};
         for (const item of conflicts) {
             const key = `${item.sku}-${item.size}`;
-            locationMap[key] = item.location;
+            // locationMap[key] = item.location;
+            locationMap[key] = item.shipping_country;
         }
 
         // Process both cart and drawer
@@ -163,9 +164,12 @@ function injectLocationButtons(conflicts) {
     // Prepare grouped data
     const result = conflicts.reduce((acc, item) => {
         const key = `${item.sku}-${item.size}`;
-        acc.grouped[item.location] = acc.grouped[item.location] || [];
-        acc.grouped[item.location].push(key);
-        acc.locationByName[key] = item.location;
+        // acc.grouped[item.location] = acc.grouped[item.location] || [];
+        // acc.grouped[item.location].push(key);
+        // acc.locationByName[key] = item.location;
+        acc.grouped[item.shipping_country] = acc.grouped[item.shipping_country] || [];
+        acc.grouped[item.shipping_country].push(key);
+        acc.locationByName[key] = item.shipping_country;
         return acc;
     }, { grouped: {}, locationByName: {} });
 
