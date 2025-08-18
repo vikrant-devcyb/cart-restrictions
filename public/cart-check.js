@@ -284,8 +284,7 @@ function bindDynamicCheckoutButtons() {
                 const allowed = await validateCartBeforeCheckout();
                 console.log('allowed',allowed);
                 if (allowed) {
-                    // window.location.href = '/checkout';
-                    console.log('ALLOW');
+                    window.location.href = '/checkout';
                 } else {
                     button.disabled = false;
                 }
