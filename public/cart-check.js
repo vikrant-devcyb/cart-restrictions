@@ -3,7 +3,7 @@ let lastVariantIds = '';
 let locationTagCache = null;
 
 function loadExternalCSS() {
-  const baseUrl = 'https://d2adbr6adc.eu-west-1.awsapprunner.com';
+  const baseUrl = 'https://laravel-app-production-34e9.up.railway.app';
   const cssUrl = `${baseUrl}/cart.css`;
   if (!document.querySelector(`link[href="${cssUrl}"]`)) {
     const link = document.createElement('link');
