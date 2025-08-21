@@ -234,7 +234,6 @@ function insertLocationTagsInCart(conflicts) {
             dl.appendChild(locationTag);
             // console.log(`DL ${index + 1}: Location tag added successfully!`);
         });
-        
         // console.warn('=== END insertLocationTagsInCart ===');
     } catch (err) {
         console.error('[Location Tag Error]', err);
