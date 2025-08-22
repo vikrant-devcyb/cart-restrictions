@@ -15,7 +15,6 @@ class ShopifyController extends Controller
         $shop = $request->get('shop');
         
         if (!$shop) {
-            Log::error('Shop parameter missing in install request');
             return redirect()->back()->with('error', 'Shop parameter is required');
         }
 
@@ -24,16 +23,12 @@ class ShopifyController extends Controller
         $apiKey = config('shopify.api_key');
         $installUrl = "https://{$shop}/admin/oauth/authorize?client_id={$apiKey}&scope={$scopes}&redirect_uri={$redirectUri}&state=123&grant_options[]=per-user";
         
-        Log::info("Redirecting to Shopify install URL for shop: {$shop}");
         return redirect($installUrl);
     }
 
     public function callback(Request $request)
     {
-        Log::info('Shopify callback received', $request->all());
-
         if (!$this->validateHmac($request->all(), $request->get('hmac'))) {
-            Log::error('Invalid HMAC in callback', $request->all());
             abort(403, 'Invalid HMAC');
         }
 
@@ -43,7 +38,6 @@ class ShopifyController extends Controller
         $apiKey = config('shopify.api_key');
 
         if (!$shop || !$code) {
-            Log::error('Missing shop or code in callback', $request->all());
             abort(400, 'Missing required parameters');
         }
 
@@ -56,38 +50,28 @@ class ShopifyController extends Controller
             ]);
 
             if (!$response->successful() || !isset($response['access_token'])) {
-                Log::error('Failed to get access token from Shopify', [
-                    'shop' => $shop,
-                    'response' => $response->json()
-                ]);
                 abort(500, 'Failed to authenticate with Shopify');
             }
 
             $accessToken = $response['access_token'];
             
-            // Store in SQLite database
+            // Store in JSON file using ShopStorage
             $stored = ShopStorage::set($shop, $accessToken);
             
             if (!$stored) {
-                Log::error('Failed to store access token in database', ['shop' => $shop]);
                 abort(500, 'Failed to store authentication data');
             }
 
             // Set session data
             session(['shop' => $shop, 'access_token' => $accessToken]);
 
-            // Inject ScriptTag with APP_URL (job will get token from database)
+            // Inject ScriptTag with APP_URL (job will get token from JSON file)
             InjectScriptTagToShop::dispatch($shop);
-
-            Log::info("Shop {$shop} installed successfully");
 
             return view('shopify.installed', ['shop' => $shop]);
 
         } catch (\Exception $e) {
-            Log::error('Exception during Shopify callback', [
-                'shop' => $shop,
-                'error' => $e->getMessage()
-            ]);
+
             abort(500, 'Installation failed');
         }
     }
@@ -114,7 +98,6 @@ class ShopifyController extends Controller
         
         if ($shop) {
             ShopStorage::delete($shop);
-            Log::info("Shop {$shop} uninstalled and removed from database");
         }
 
         return response()->json(['status' => 'success']);
