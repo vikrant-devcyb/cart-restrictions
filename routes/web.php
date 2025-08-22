@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Artisan;
 
 Route::delete('/shop/{shop}', function ($shopDomain, Request $request) {
-    $deleted = ShopStorage::delete($shopDomain); // Changed from Shop model
+    $deleted = ShopStorage::delete($shopDomain);
 
     if ($deleted) {
         return redirect('/')->with('status', 'Shop data deleted successfully!');
